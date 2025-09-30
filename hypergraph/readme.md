@@ -1,1 +1,1 @@
-pnpm build --filter=@antv/g6
+pnpm build --filter=g6

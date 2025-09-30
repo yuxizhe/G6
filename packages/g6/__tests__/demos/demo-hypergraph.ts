@@ -214,6 +214,13 @@ export const demoHypergraph: TestCase = async (context) => {
 
   await graph.render();
 
+  // 订阅 PointerMove 事件
+  graph.on('pointermove', (event) => {
+    console.log('PointerMove Event:', {
+      event,
+    });
+  });
+
   // 添加交互式控制面板
   demoHypergraph.form = (panel) => {
     const config = {
