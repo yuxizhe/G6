@@ -191,7 +191,7 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
     if (!isEqual(this.bubbleSetOptions, bubbleSetOptions)) this.init();
     this.bubbleSetOptions = { ...bubbleSetOptions };
 
-    const finalStyle = { ...style, d: this.getPath() };
+    const finalStyle = { ...style, d: this.getPath(), zIndex: -1 };
     if (!this.shape) {
       this.shape = new Contour({ style: finalStyle });
       this.context.canvas.appendChild(this.shape);
@@ -206,7 +206,7 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
     if (!this.shape) return;
     const id = idOf(event.data);
     if (![...this.options.members, ...this.options.avoidMembers].includes(id)) return;
-    this.shape.update({ ...this.parseOptions().style, d: this.getPath(id) } as any);
+    this.shape.update({ ...this.parseOptions().style, d: this.getPath(id), zIndex: -1 } as any);
   };
 
   private getPath = (forceUpdateId?: ID): PathArray => {
