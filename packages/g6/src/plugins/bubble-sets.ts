@@ -2,7 +2,7 @@ import type { PathArray } from '@antv/util';
 import { deepMix, isEqual, isFunction } from '@antv/util';
 import type { IBubbleSetOptions, ILine, IRectangle } from 'bubblesets-js';
 import { BubbleSets as BubbleSetsJS, Line, Rectangle, defaultOptions } from 'bubblesets-js';
-import { GraphEvent } from '../constants';
+import { CommonEvent, GraphEvent } from '../constants';
 import type { ContourStyleProps } from '../elements/shapes';
 import { Contour } from '../elements/shapes';
 import type { Graph } from '../runtime/graph';
@@ -88,6 +88,82 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
     this.context.graph.on(GraphEvent.AFTER_ELEMENT_UPDATE, this.updateBubbleSetsPath);
   }
 
+  private bindShapeEvents() {
+    if (!this.shape) return;
+
+    // Add event listeners to the underlying Path shape (key shape)
+    const keyShape = (this.shape as any).shapeMap?.key;
+    if (keyShape) {
+      keyShape.addEventListener(CommonEvent.POINTER_OVER, this.onPointerOver);
+      keyShape.addEventListener(CommonEvent.POINTER_MOVE, this.onPointerMove);
+      keyShape.addEventListener(CommonEvent.POINTER_LEAVE, this.onPointerLeave);
+      keyShape.addEventListener(CommonEvent.CLICK, this.onClick);
+    }
+  }
+
+  private unbindShapeEvents() {
+    if (!this.shape) return;
+
+    const keyShape = (this.shape as any).shapeMap?.key;
+    if (keyShape) {
+      keyShape.removeEventListener(CommonEvent.POINTER_OVER, this.onPointerOver);
+      keyShape.removeEventListener(CommonEvent.POINTER_MOVE, this.onPointerMove);
+      keyShape.removeEventListener(CommonEvent.POINTER_LEAVE, this.onPointerLeave);
+      keyShape.removeEventListener(CommonEvent.CLICK, this.onClick);
+    }
+  }
+
+  private onPointerOver = (event: any) => {
+    // Forward the event to the graph with bubble-sets as the target type
+    const graph = this.context.graph as any;
+    const stdEvent = {
+      ...event,
+      target: { ...this, id: this.options.key, ...this.options },
+      targetType: 'bubble-sets',
+      originalTarget: event.target,
+    };
+    graph.emit(CommonEvent.POINTER_OVER, stdEvent);
+  };
+
+  private onPointerLeave = (event: any) => {
+    // Forward the event to the graph with bubble-sets as the target type
+    const graph = this.context.graph as any;
+    const stdEvent = {
+      ...event,
+      target: { ...this, id: this.options.key, ...this.options },
+      targetType: 'bubble-sets',
+      originalTarget: event.target,
+    };
+
+    graph.emit(CommonEvent.POINTER_LEAVE, stdEvent);
+  };
+
+  private onPointerMove = (event: any) => {
+    // Forward the event to the graph with bubble-sets as the target type
+    const graph = this.context.graph as any;
+    const stdEvent = {
+      ...event,
+      target: { ...this, id: this.options.key, ...this.options },
+      targetType: 'bubble-sets',
+      originalTarget: event.target,
+    };
+
+    graph.emit(CommonEvent.POINTER_MOVE, stdEvent);
+  };
+
+  private onClick = (event: any) => {
+    // Forward the event to the graph with bubble-sets as the target type
+    const graph = this.context.graph as any;
+    const stdEvent = {
+      ...event,
+      target: { ...this, id: this.options.key, ...this.options },
+      targetType: 'bubble-sets',
+      originalTarget: event.target,
+    };
+
+    graph.emit(CommonEvent.CLICK, stdEvent);
+  };
+
   private init() {
     this.bubbleSets = new BubbleSetsJS(this.options);
     this.members = new Map();
@@ -119,6 +195,8 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
     if (!this.shape) {
       this.shape = new Contour({ style: finalStyle });
       this.context.canvas.appendChild(this.shape);
+      // Bind events after shape is created
+      this.bindShapeEvents();
     } else {
       this.shape.update(finalStyle);
     }
@@ -128,7 +206,7 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
     if (!this.shape) return;
     const id = idOf(event.data);
     if (![...this.options.members, ...this.options.avoidMembers].includes(id)) return;
-    this.shape.update({ ...this.parseOptions().style, d: this.getPath(id) });
+    this.shape.update({ ...this.parseOptions().style, d: this.getPath(id) } as any);
   };
 
   private getPath = (forceUpdateId?: ID): PathArray => {
@@ -294,6 +372,7 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
   public destroy(): void {
     this.context.graph.off(GraphEvent.AFTER_RENDER, this.drawBubbleSets);
     this.context.graph.off(GraphEvent.AFTER_ELEMENT_UPDATE, this.updateBubbleSetsPath);
+    this.unbindShapeEvents();
     this.shape.destroy();
     super.destroy();
   }

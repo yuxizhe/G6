@@ -72,7 +72,7 @@ interface NativeEvent {
 type TargetedEvent<E extends FederatedEvent, T extends Target = Target> = Omit<E, 'target'> & {
   originalTarget: DisplayObject;
   target: T;
-  targetType: 'canvas' | 'node' | 'edge' | 'combo';
+  targetType: 'canvas' | 'node' | 'edge' | 'combo' | 'bubble-sets';
 };
 
 export type Target = Document | Element;
