@@ -4247,3 +4247,5 @@ const datas = {
     }
   }
 }
+
+export { datas };

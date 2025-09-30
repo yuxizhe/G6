@@ -94,6 +94,9 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
     // Add event listeners to the underlying Path shape (key shape)
     const keyShape = (this.shape as any).shapeMap?.key;
     if (keyShape) {
+      // 设置 pointer-events 为 all，确保整个路径区域都能响应事件
+      keyShape.style.pointerEvents = 'all';
+
       keyShape.addEventListener(CommonEvent.POINTER_OVER, this.onPointerOver);
       keyShape.addEventListener(CommonEvent.POINTER_MOVE, this.onPointerMove);
       keyShape.addEventListener(CommonEvent.POINTER_LEAVE, this.onPointerLeave);
@@ -191,7 +194,13 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
     if (!isEqual(this.bubbleSetOptions, bubbleSetOptions)) this.init();
     this.bubbleSetOptions = { ...bubbleSetOptions };
 
-    const finalStyle = { ...style, d: this.getPath(), zIndex: -1 };
+    const finalStyle = {
+      ...style,
+      d: this.getPath(),
+      zIndex: -1,
+      // 确保填充区域也能响应事件
+      pointerEvents: 'all' as const,
+    };
     if (!this.shape) {
       this.shape = new Contour({ style: finalStyle });
       this.context.canvas.appendChild(this.shape);
@@ -206,7 +215,13 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
     if (!this.shape) return;
     const id = idOf(event.data);
     if (![...this.options.members, ...this.options.avoidMembers].includes(id)) return;
-    this.shape.update({ ...this.parseOptions().style, d: this.getPath(id), zIndex: -1 } as any);
+    this.shape.update({
+      ...this.parseOptions().style,
+      d: this.getPath(id),
+      zIndex: -1,
+      // 确保填充区域也能响应事件
+      pointerEvents: 'all' as const,
+    } as any);
   };
 
   private getPath = (forceUpdateId?: ID): PathArray => {
@@ -362,6 +377,23 @@ export class BubbleSets extends BasePlugin<BubbleSetsOptions> {
    */
   public getAvoidMember() {
     return this.options.avoidMembers;
+  }
+  /**
+   * <zh/> 更新插件配置
+   *
+   * <en/> Update plugin options
+   * @param options - <zh/> 插件配置 | <en/> plugin options
+   */
+  public update(options: Partial<BubbleSetsOptions>): void {
+    super.update(options);
+
+    // 重新初始化 BubbleSetsJS 实例以应用新参数
+    // Reinitialize BubbleSetsJS instance to apply new parameters
+    this.init();
+
+    // 强制重新绘制 bubble
+    // Force redraw bubble
+    this.drawBubbleSets();
   }
   /**
    * <zh/> 销毁
